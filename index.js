@@ -3,8 +3,12 @@
  * to run it on stage: provide a STAGE_TOKEN and then run `npm run start:stage`
  * to run it on prod: provide a PROD_TOKEN and then run `npm run start:prod`
 ***/
-const STAGE_TOKEN = null
-const PROD_TOKEN = null
+
+// ==== CONFIGURATION ====
+const STAGE_TOKEN = null // only for stage repos
+const PROD_TOKEN = null // only for prod repos
+const SLEEP = 50 // time to wait between 2 repositories in milliseconds
+// =======================
 
 const RepoParser = require('./repoparser')
 const fetch = require('node-fetch')
@@ -69,7 +73,7 @@ RepoParser('repositories.txt').then(allRepos => {
 
       setTimeout(() => {
         analyseNextRepository(tail)
-      }, 50)
+      }, SLEEP)
     })
     .catch(e => {
       stream.write(`[${repository}]\n${e}\n`)
