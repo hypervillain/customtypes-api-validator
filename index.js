@@ -3,8 +3,8 @@
  * to run it on stage: provide a STAGE_TOKEN and then run `npm run start:stage`
  * to run it on prod: provide a PROD_TOKEN and then run `npm run start:prod`
 ***/
-const STAGE_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoidXNlciIsImlkIjoiNjAzNTBmNGEwYzY2YjA3NTcxYjdkYWQ0IiwiZGF0ZSI6MTYxODU4MzIyOSwiaWF0IjoxNjE4NTgzMjI5fQ.C3LmGYN1WH0vr658EisijCZZVhD8L1MM7iAfAsnWjGo'
-const PROD_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoidXNlciIsImlkIjoiNThjNWM4YTUyNWJmNTE3MmExYTU2YjM3IiwiZGF0ZSI6MTYxODU4MjE4NSwiaWF0IjoxNjE4NTgyMTg1fQ.HWLMiQWKfNLYY6vWhPaExMQgwj6u-eJ0gp-EkNtTSUk'
+const STAGE_TOKEN = null
+const PROD_TOKEN = null
 
 const RepoParser = require('./repoparser')
 const fetch = require('node-fetch')
@@ -23,17 +23,20 @@ const token = (() => {
 if(token === DEFAULT_TOKEN_VALUE) throw new Error('Specificy an auth token [USER_TOKEN] in "index.js" at the top of the file')
 if(!token) throw new Error('Missing authentication token')
 
-RepoParser('repositories.txt').then(repositories => {
+RepoParser('repositories.txt').then(allRepos => {
 
   console.log('----- Repositories List -----')
-  console.log(repositories.join('\n'))
+  console.log(allRepos.join('\n'))
   console.log('-----------------------------')
   
   
   //generate new log
   var stream = Files.createWriteStream(`./logs/${mode}/logs-${Date.now().toString()}.txt`, { recursive: true, flags:'a' });
   
-  repositories.forEach(repository => {
+  function analyseNextRepository(repositories) {
+    if(!repositories || !repositories.length) return;
+
+    const [repository, tail] = [repositories[0], repositories.slice(1)]
     const domain = (() => {
       switch(mode) {
         case 'prod': return 'prismic.io'
@@ -63,9 +66,15 @@ RepoParser('repositories.txt').then(repositories => {
         }
       })()
       stream.write(`[${repository}] - ${msg}\n`);
+
+      setTimeout(() => {
+        analyseNextRepository(tail)
+      }, 50)
     })
     .catch(e => {
       stream.write(`[${repository}]\n${e}\n`)
     })
-  })
+  }
+
+  analyseNextRepository(allRepos)
 })
