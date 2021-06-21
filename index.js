@@ -4,22 +4,17 @@
  * to run it on prod: provide a PROD_TOKEN and then run `npm run start:prod`
 ***/
 
-// ==== CONFIGURATION ====
-const STAGE_TOKEN = null // only for stage repos
-const PROD_TOKEN = null // only for prod repos
-const SLEEP = 50 // time to wait between 2 repositories in milliseconds
-// =======================
-
 const RepoParser = require('./repoparser')
 const fetch = require('node-fetch')
 const Files = require('./files')
+const Config = require('./config.json')
 
 const DEFAULT_TOKEN_VALUE = 'token'
 const mode = process.env.MODE || 'prod'
 const token = (() => {
   switch(mode) {
-    case 'prod': return PROD_TOKEN
-    case 'stage': return STAGE_TOKEN
+    case 'prod': return Config.PROD_TOKEN
+    case 'stage': return Config.STAGE_TOKEN
     default: throw new Error(`Invalid mode provided ${mode}`)
   }
 })() || DEFAULT_TOKEN_VALUE
@@ -60,20 +55,23 @@ RepoParser('repositories.txt').then(allRepos => {
       }
     })
     .then(res => {
+      return res.text().then(text => [res.status, text])
+    })
+    .then(([status, text]) => {
       const msg = (() => {
-        switch(res.status) {
+        switch(status) {
           case 200: return 'Loaded'
           case 401: return 'Unauthorized | probably an invalid token'
           case 404: return `Unavailable | You're probably not on an SM cluster`
           case 500: return 'Error | Cannot load the repository, some custom types are invalid.'
-          default: return 'Anomaly | Cannot check if the custom types can be loaded on this repo'
+          default: return `Anomaly | Cannot check if the custom types can be loaded on this repo ||| ${status} -- ${text}`
         }
       })()
       stream.write(`[${repository}] - ${msg}\n`);
 
       setTimeout(() => {
         analyseNextRepository(tail)
-      }, SLEEP)
+      }, Config.SLEEP_MS)
     })
     .catch(e => {
       stream.write(`[${repository}]\n${e}\n`)

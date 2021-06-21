@@ -12,7 +12,7 @@ This tool provide a way to query your custom types through the Custom Type API a
 
 Either grab your `prismic-auth` cookie when logged in on Prismic or authenticate with `auth.wroom.io/login` or `auth.prismic.io/login` depending which repos you need to test.
 
-Inside `index.js` at the top of the file, provide a token either `STAGE_TOKEN` or `PROD_TOKEN`
+Copy `config.demo.json` to a file named `config.json`, provide a token either `STAGE_TOKEN` or `PROD_TOKEN`
 
 
 ### Step 2: specifiying repositories
