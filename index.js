@@ -68,6 +68,20 @@ RepoParser('repositories.txt').then(allRepos => {
         }
       })()
       stream.write(`[${repository}] - ${msg}\n`);
+      
+      try {
+        const ct = JSON.parse(text)
+        const tabs = Object.entries(ct.json)
+        tabs.forEach(([tabKey, values]) => {
+          Object.entries(values).forEach(([fieldKey, field]) => {
+            if (field.type === 'UID' && fieldKey !== 'uid') {
+              stream.write(`[${repository}] WRONG UID KEY IN ct ${ct.id}, tab ${tabKey}, fieldkey: ${fieldKey}`);
+            }
+          })
+        })
+      } catch(e) {
+        console.error(e)
+      }
 
       setTimeout(() => {
         analyseNextRepository(tail)
